@@ -12,6 +12,13 @@
             @method('PUT')
 
                 <div class="form-control my-4">
+                    <label for="status" class="label">
+                        <span class="label-text">ステータス:</span>
+                    </label>
+                    <input type="text" name="status" value="{{ $task->status }}" class="input input-bordered w-full">
+                </div>
+
+                <div class="form-control my-4">
                     <label for="content" class="label">
                         <span class="label-text">タスク:</span>
                     </label>
