@@ -15,15 +15,11 @@ class TasksController extends Controller
      */
     public function index()
     {
-        // タスク一覧を取得
-        $tasks = Task::orderBy('id', 'desc')->paginate(25);
-
         $data = [];
         if (\Auth::check()) { // 認証済みの場合
             // 認証済みユーザーを取得
             $user = \Auth::user();
             // ユーザーの投稿の一覧を作成日時の降順で取得
-            // （後のChapterで他ユーザーの投稿も取得するように変更しますが、現時点ではこのユーザーの投稿のみ取得します）
             $tasks = $user->tasks()->orderBy('created_at', 'desc')->paginate(10);
             $data = [
                 'user' => $user,
@@ -65,7 +61,7 @@ class TasksController extends Controller
 
         // タスクを作成
         $task = new Task;
-        $task->user_id = $request->user_id;
+        $task->user_id = auth()->id();
         $task->status = $request->status;
         $task->content = $request->content;
         $task->save();
@@ -82,6 +78,10 @@ class TasksController extends Controller
         // idの値でタスクを検索して取得
         $task = Task::findOrFail($id);
 
+        if (\Auth::id() !== $task->user_id) {
+            return redirect('/');
+        }
+
         // タスク詳細ビューでそれを表示
         return view('tasks.show', [
             'task' => $task,
@@ -95,6 +95,10 @@ class TasksController extends Controller
     {
         // idの値でタスクを検索して取得
         $task = Task::findOrFail($id);
+
+        if (\Auth::id() !== $task->user_id) {
+            return redirect('/');
+        }
 
         // タスク編集ビューでそれを表示
         return view('tasks.edit', [
@@ -114,7 +118,6 @@ class TasksController extends Controller
 
         // idの値でタスクを検索して取得
         $task = Task::findOrFail($id);
-        $task->user_id = $request->user_id;
         $task->status = $request->status;
         $task->content = $request->content;
         $task->save();
