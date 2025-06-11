@@ -10,12 +10,7 @@
         <form method="POST" action="{{ route('tasks.update', $task->id) }}" class="w-1/2">
             @csrf
             @method('PUT')
-                <div class="form-control my-4">
-                    <label for="user_id" class="label">
-                        <span class="label-text">ユーザーID:</span>
-                    </label>
-                    <input type="text" name="user_id" value="{{ $task->user_id }}" class="input input-bordered w-full">
-                </div>
+                <input type="text" value="{{Auth::user()->id}}" name="user_id" class="hidden">
 
                 <div class="form-control my-4">
                     <label for="status" class="label">

@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
+
 use App\Models\Task;
+use App\Models\User;
 
 class TasksController extends Controller
 {
@@ -14,12 +16,28 @@ class TasksController extends Controller
     public function index()
     {
         // タスク一覧を取得
-        $tasks = Task::orderBy('id')->paginate(25);
+        $tasks = Task::orderBy('id', 'desc')->paginate(25);
 
-        // タスク一覧ビューでそれを表示
-        return view('tasks.index', [
-            'tasks' => $tasks,
-        ]);
+        $data = [];
+        if (\Auth::check()) { // 認証済みの場合
+            // 認証済みユーザーを取得
+            $user = \Auth::user();
+            // ユーザーの投稿の一覧を作成日時の降順で取得
+            // （後のChapterで他ユーザーの投稿も取得するように変更しますが、現時点ではこのユーザーの投稿のみ取得します）
+            $tasks = $user->tasks()->orderBy('created_at', 'desc')->paginate(10);
+            $data = [
+                'user' => $user,
+                'tasks' => $tasks,
+            ];
+
+            // タスク一覧ビューでそれを表示
+            return view('tasks.index', [
+                'tasks' => $tasks,
+            ]);
+        }
+
+        // dashboardビューでそれらを表示
+        return view('dashboard', $data);
     }
 
     /**
@@ -41,7 +59,6 @@ class TasksController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'user_id' => 'required|max:16',
             'status' => 'required|max:10',
             'content' => 'required',
         ]);
@@ -91,7 +108,6 @@ class TasksController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'user_id' => 'required|max:16',
             'status' => 'required|max:10',
             'content' => 'required',
         ]);
@@ -115,7 +131,11 @@ class TasksController extends Controller
         // idの値でタスクを検索して取得
         $task = Task::findOrFail($id);
         // タスクを削除
-        $task->delete();
+
+        if (\Auth::id() === $task->user_id) {
+            $task->delete();
+            return redirect('/');
+        }
 
         // トップページへリダイレクトさせる
         return redirect('/');
